@@ -6,239 +6,156 @@
 <title>Gestión de Moldes — Tareas de Mantenimiento</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #0f1117;
-    --surface: #181c25;
-    --surface2: #1e2330;
-    --border: #2a3040;
-    --border2: #3a4460;
-    --text: #e4e8f0;
-    --text2: #8a93a8;
-    --text3: #5a6278;
-    --accent: #3a7bd5;
-    --alta: #e05252;
-    --alta-bg: rgba(224,82,82,0.12);
-    --media: #d4933a;
-    --media-bg: rgba(212,147,58,0.12);
-    --baja: #4ca87a;
-    --baja-bg: rgba(76,168,122,0.12);
-    --p0: #7a6fcf;
-    --p0-bg: rgba(122,111,207,0.12);
-    --font: 'IBM Plex Sans', sans-serif;
-    --mono: 'IBM Plex Mono', monospace;
+    --bg: #0f1117; --surface: #181c25; --surface2: #1e2330;
+    --border: #2a3040; --border2: #3a4460;
+    --text: #e4e8f0; --text2: #8a93a8; --text3: #5a6278;
+    --accent: #3a7bd5; --accent-dim: rgba(58,123,213,0.15);
+    --alta: #e05252; --alta-bg: rgba(224,82,82,0.12);
+    --media: #d4933a; --baja: #4ca87a; --p0: #7a6fcf;
+    --font: 'IBM Plex Sans', sans-serif; --mono: 'IBM Plex Mono', monospace;
     --radius: 4px;
   }
-
   body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; min-height: 100vh; overflow-x: auto; }
 
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    height: 52px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+  /* LOGIN OVERLAY */
+  #login-screen {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px; z-index: 500;
   }
-  .header-logo { font-family: var(--mono); font-size: 12px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
-  .header-title { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+  #login-screen h1 { font-size: 20px; font-weight: 600; }
+  #login-screen p { font-size: 13px; color: var(--text2); text-align: center; max-width: 340px; }
+  .btn-google {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff; color: #333; border: none;
+    padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: box-shadow 0.15s;
+  }
+  .btn-google:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .btn-google svg { width: 20px; height: 20px; }
+
+  /* HEADER */
+  header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px; display: flex; align-items: center; gap: 20px;
+    height: 52px; position: sticky; top: 0; z-index: 100;
+  }
+  .header-logo { font-family: var(--mono); font-size: 12px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; }
+  .header-title { font-size: 14px; font-weight: 600; flex: 1; }
+  .header-user { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  .header-user img { width: 26px; height: 26px; border-radius: 50%; }
   .header-stats { display: flex; gap: 20px; }
   .header-stat { display: flex; flex-direction: column; align-items: flex-end; }
-  .header-stat-val { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--text); line-height: 1; }
+  .header-stat-val { font-family: var(--mono); font-size: 16px; font-weight: 500; line-height: 1; }
   .header-stat-val.red { color: var(--alta); }
   .header-stat-val.blue { color: var(--accent); }
   .header-stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
 
+  /* TOOLBAR */
   .toolbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 8px 24px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-    position: sticky;
-    top: 52px;
-    z-index: 90;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 8px 24px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    position: sticky; top: 52px; z-index: 90;
   }
   .toolbar-group { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
   .toolbar-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
-
   select, input[type="text"] {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 13px;
-    padding: 5px 8px;
-    border-radius: var(--radius);
-    outline: none;
-    transition: border-color 0.15s;
-    height: 30px;
-    max-width: 160px;
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--font); font-size: 13px; padding: 5px 8px;
+    border-radius: var(--radius); outline: none; height: 30px; max-width: 160px;
   }
   select:focus, input[type="text"]:focus { border-color: var(--accent); }
   input[type="text"] { width: 180px; max-width: 180px; }
-
   .btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text2);
-    font-family: var(--font);
-    font-size: 12px;
-    padding: 5px 12px;
-    border-radius: var(--radius);
-    cursor: pointer;
-    height: 30px;
+    background: transparent; border: 1px solid var(--border); color: var(--text2);
+    font-family: var(--font); font-size: 12px; padding: 5px 12px;
+    border-radius: var(--radius); cursor: pointer; height: 30px;
+    display: flex; align-items: center; gap: 5px; flex-shrink: 0; white-space: nowrap;
     transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    flex-shrink: 0;
-    white-space: nowrap;
   }
   .btn:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
-  .btn.primary:hover { background: #2e65b8; border-color: #2e65b8; }
+  .btn.primary:hover { background: #2e65b8; }
+  .btn.danger { border-color: var(--alta); color: var(--alta); }
   .divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
 
+  /* TABLE */
   .main { padding: 0; }
-
-  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1100px; }
-
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1400px; }
   thead { position: sticky; top: 0; z-index: 50; }
-
   th {
-    background: var(--surface2);
-    color: var(--text3);
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-    text-align: left;
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
+    background: var(--surface2); color: var(--text3); font-family: var(--mono);
+    font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 8px 12px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border);
+    text-align: left; white-space: nowrap; cursor: pointer; user-select: none;
   }
   th:hover { color: var(--text); background: var(--border); }
   th.sorted { color: var(--accent); }
-  th .sort-arrow { margin-left: 4px; opacity: 0.5; }
-  th.sorted .sort-arrow { opacity: 1; }
-
-  td { padding: 7px 12px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); vertical-align: middle; color: var(--text); }
+  th .sa { margin-left: 4px; opacity: 0.5; }
+  th.sorted .sa { opacity: 1; }
+  td { padding: 6px 10px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); vertical-align: middle; color: var(--text); }
   tr:hover td { background: var(--surface2); }
+  tr.saving td { opacity: 0.6; }
 
-  td.num { font-family: var(--mono); font-size: 11px; color: var(--text3); width: 44px; text-align: right; padding-right: 14px; }
-  td.fecha { font-family: var(--mono); font-size: 11px; color: var(--text2); white-space: nowrap; width: 90px; }
-  td.molde { font-weight: 500; max-width: 200px; }
+  td.num { font-family: var(--mono); font-size: 11px; color: var(--text3); width: 40px; text-align: right; }
+  td.fecha { font-family: var(--mono); font-size: 11px; color: var(--text2); white-space: nowrap; }
+  td.molde { font-weight: 500; max-width: 180px; }
   td.molde.critico { color: var(--alta); }
-  td.inspector { color: var(--text2); white-space: nowrap; max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
-  td.problema { color: var(--text2); max-width: 260px; }
-  td.problema span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  td.inspector { color: var(--text2); white-space: nowrap; }
+  td.ro { color: var(--text2); max-width: 220px; }
+  td.ro span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
+  /* BADGES */
   .badge-pri, .badge-est {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 2px;
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    border: 1px solid transparent;
+    display: inline-block; padding: 2px 8px; border-radius: 2px;
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.04em; white-space: nowrap; border: 1px solid transparent;
   }
-  .badge-pri.pri-alta  { border-color: var(--alta);  color: var(--alta); }
-  .badge-pri.pri-media { border-color: var(--media); color: var(--media); }
-  .badge-pri.pri-baja  { border-color: var(--baja);  color: var(--baja); }
-  .badge-pri.pri-p0    { border-color: var(--p0);    color: var(--p0); }
-  .badge-est.ni   { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-  .badge-est.curso{ border-color: var(--media);  color: var(--media); }
-  .badge-est.bloq { border-color: var(--alta);   color: var(--alta); }
-  .badge-est.done { border-color: var(--baja);   color: var(--baja); }
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text3);
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 2px;
-    outline: none;
-    width: 100%;
-    min-width: 90px;
-    cursor: pointer;
-    transition: border-color 0.15s;
-    letter-spacing: 0.04em;
-    height: auto;
-  }
-  .pri-select.pri-alta  { border-color: var(--alta);  color: var(--alta); }
-  .pri-select.pri-media { border-color: var(--media); color: var(--media); }
-  .pri-select.pri-baja  { border-color: var(--baja);  color: var(--baja); }
-  .pri-select.pri-p0    { border-color: var(--p0);    color: var(--p0); }
+  .pri-alta  { border-color: var(--alta);  color: var(--alta); }
+  .pri-media { border-color: var(--media); color: var(--media); }
+  .pri-baja  { border-color: var(--baja);  color: var(--baja); }
+  .pri-p0    { border-color: var(--p0);    color: var(--p0); }
+  .est-ni    { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .est-curso { border-color: var(--media); color: var(--media); }
+  .est-bloq  { border-color: var(--alta);  color: var(--alta); }
+  .est-done  { border-color: var(--baja);  color: var(--baja); }
 
-  .assign-select {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 12px;
-    padding: 3px 6px;
-    border-radius: var(--radius);
-    outline: none;
-    width: 100%;
-    min-width: 130px;
-    transition: border-color 0.15s;
-    height: auto;
+  /* INLINE EDITABLE FIELDS */
+  .cell-edit {
+    background: transparent; border: 1px solid transparent; color: var(--text);
+    font-family: var(--font); font-size: 12px; padding: 3px 6px;
+    border-radius: var(--radius); outline: none; width: 100%; min-width: 100px;
+    transition: border-color 0.15s; height: auto;
   }
-  .assign-select:focus { border-color: var(--accent); }
-  .assign-select.has-value { color: var(--accent); font-weight: 500; }
-
-  .status-select {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text2);
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 2px;
-    outline: none;
-    width: 100%;
-    min-width: 110px;
-    cursor: pointer;
-    height: auto;
+  .cell-edit:hover { border-color: var(--border); }
+  .cell-edit:focus { border-color: var(--accent); background: var(--surface2); }
+  .cell-select {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--mono); font-size: 11px; padding: 2px 6px;
+    border-radius: 2px; outline: none; width: 100%; min-width: 110px;
+    cursor: pointer; height: auto; transition: border-color 0.15s;
   }
-  .status-select.ni   { border-color: var(--accent); color: var(--accent); }
-  .status-select.curso{ border-color: var(--media);  color: var(--media); }
-  .status-select.bloq { border-color: var(--alta);   color: var(--alta); }
-  .status-select.done { border-color: var(--baja);   color: var(--baja); }
+  .cell-select:focus { border-color: var(--accent); }
+  .cell-select.pri-alta  { border-color: var(--alta);  color: var(--alta); }
+  .cell-select.pri-media { border-color: var(--media); color: var(--media); }
+  .cell-select.pri-baja  { border-color: var(--baja);  color: var(--baja); }
+  .cell-select.pri-p0    { border-color: var(--p0);    color: var(--p0); }
+  .cell-select.est-ni    { border-color: var(--accent); color: var(--accent); }
+  .cell-select.est-curso { border-color: var(--media); color: var(--media); }
+  .cell-select.est-bloq  { border-color: var(--alta);  color: var(--alta); }
+  .cell-select.est-done  { border-color: var(--baja);  color: var(--baja); }
+  .cell-select.tec-val   { color: var(--accent); font-weight: 500; }
 
-  .notes-input {
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--text2);
-    font-family: var(--font);
-    font-size: 12px;
-    padding: 3px 6px;
-    border-radius: var(--radius);
-    outline: none;
-    width: 100%;
-    min-width: 140px;
-    transition: border-color 0.15s;
-    height: auto;
+  /* DATE INPUT */
+  input[type="date"].cell-edit {
+    min-width: 130px; color-scheme: dark;
   }
-  .notes-input:hover { border-color: var(--border); }
-  .notes-input:focus { border-color: var(--accent); background: var(--surface2); color: var(--text); }
 
-  .empty-row td { text-align: center; padding: 48px; color: var(--text3); font-size: 13px; }
+  .empty-row td { text-align: center; padding: 48px; color: var(--text3); }
+  .saving-indicator { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--media); margin-left: 6px; vertical-align: middle; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
   .toast {
     position: fixed; bottom: 24px; right: 24px;
@@ -249,74 +166,48 @@
   }
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--baja); margin-right: 8px; vertical-align: middle; }
+  .toast.err .dot { background: var(--alta); }
 
   footer {
     background: var(--surface); border-top: 1px solid var(--border);
-    padding: 8px 24px; display: flex; align-items: center;
-    justify-content: space-between; font-family: var(--mono);
-    font-size: 11px; color: var(--text3);
+    padding: 8px 24px; display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
     position: sticky; bottom: 0; z-index: 100;
   }
-  .footer-right { display: flex; gap: 16px; }
-
-  .modal-backdrop {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.6); z-index: 200;
-    align-items: center; justify-content: center;
-  }
-  .modal-backdrop.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 6px; padding: 24px; width: 480px; max-width: 95vw; }
-  .modal h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
-  .modal-field { margin-bottom: 12px; }
-  .modal-field label { display: block; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-  .modal-field input, .modal-field select, .modal-field textarea {
-    width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
-    font-family: var(--font); font-size: 13px; padding: 7px 10px; border-radius: var(--radius); outline: none; height: auto;
-  }
-  .modal-field textarea { resize: vertical; height: 70px; }
-  .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { border-color: var(--accent); }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
+<div id="login-screen">
+  <h1>Gestión de Moldes</h1>
+  <p>Inicia sesión con tu cuenta de Google para ver y editar las tareas de mantenimiento.</p>
+  <button class="btn-google" onclick="iniciarLogin()">
+    <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+    Iniciar sesión con Google
+  </button>
+</div>
+
 <header>
   <span class="header-logo">Planta / Moldes</span>
   <span class="header-title">Gestión de Tareas de Mantenimiento</span>
+  <div class="header-user" id="header-user" style="display:none">
+    <img id="user-avatar" src="" alt="">
+    <span id="user-name"></span>
+    <button class="btn" onclick="cerrarSesion()" style="margin-left:4px">Salir</button>
+  </div>
   <div class="header-stats">
-    <div class="header-stat">
-      <span class="header-stat-val" id="stat-total">—</span>
-      <span class="header-stat-label">Registros</span>
-    </div>
-    <div class="header-stat">
-      <span class="header-stat-val red" id="stat-alta">—</span>
-      <span class="header-stat-label">P. Alta</span>
-    </div>
-    <div class="header-stat">
-      <span class="header-stat-val blue" id="stat-ni">—</span>
-      <span class="header-stat-label">No iniciadas</span>
-    </div>
-    <div class="header-stat">
-      <span class="header-stat-val" id="stat-sinasig">—</span>
-      <span class="header-stat-label">Sin asignar</span>
-    </div>
+    <div class="header-stat"><span class="header-stat-val" id="stat-total">—</span><span class="header-stat-label">Registros</span></div>
+    <div class="header-stat"><span class="header-stat-val red" id="stat-alta">—</span><span class="header-stat-label">P. Alta</span></div>
+    <div class="header-stat"><span class="header-stat-val blue" id="stat-ni">—</span><span class="header-stat-label">No iniciadas</span></div>
+    <div class="header-stat"><span class="header-stat-val" id="stat-sinasig">—</span><span class="header-stat-label">Sin asignar</span></div>
   </div>
 </header>
 
 <div class="toolbar">
-  <div class="toolbar-group">
-    <span class="toolbar-label">Inspector</span>
-    <select id="f-inspector"><option value="">Todos</option></select>
-  </div>
-  <div class="toolbar-group">
-    <span class="toolbar-label">Técnico</span>
-    <select id="f-tecnico">
-      <option value="">Todos</option>
-      <option value="__sin__">Sin asignar</option>
-    </select>
-  </div>
-  <div class="toolbar-group">
-    <span class="toolbar-label">Prioridad</span>
+  <div class="toolbar-group"><span class="toolbar-label">Inspector</span><select id="f-inspector"><option value="">Todos</option></select></div>
+  <div class="toolbar-group"><span class="toolbar-label">Técnico</span><select id="f-tecnico"><option value="">Todos</option><option value="__sin__">Sin asignar</option></select></div>
+  <div class="toolbar-group"><span class="toolbar-label">Prioridad</span>
     <select id="f-prioridad">
       <option value="">Todas</option>
       <option value="P. Alta">Alta</option>
@@ -326,8 +217,7 @@
       <option value="__sin__">Sin prioridad</option>
     </select>
   </div>
-  <div class="toolbar-group">
-    <span class="toolbar-label">Estado</span>
+  <div class="toolbar-group"><span class="toolbar-label">Estado</span>
     <select id="f-estado">
       <option value="">Todos</option>
       <option value="No iniciada">No iniciada</option>
@@ -336,30 +226,25 @@
       <option value="Completada">Completada</option>
     </select>
   </div>
-  <div class="toolbar-group">
-    <span class="toolbar-label">Molde</span>
-    <select id="f-molde"><option value="">Todos</option></select>
-  </div>
-  <div class="toolbar-group">
-    <input type="text" id="f-buscar" placeholder="Buscar molde o problema…">
-  </div>
+  <div class="toolbar-group"><span class="toolbar-label">Molde</span><select id="f-molde"><option value="">Todos</option></select></div>
+  <div class="toolbar-group"><input type="text" id="f-buscar" placeholder="Buscar molde o problema…"></div>
   <div class="divider"></div>
   <button class="btn" onclick="limpiarFiltros()">↺ Limpiar</button>
-  <button class="btn" onclick="recargar()">⟳ Recargar datos</button>
-  <button class="btn primary" onclick="guardarCSV()">↓ Exportar CSV</button>
+  <button class="btn" onclick="recargar()">⟳ Recargar</button>
+  <button class="btn primary" onclick="guardarCSV()">↓ CSV</button>
 </div>
 
 <div class="main">
-  <table id="tabla">
+  <table>
     <thead>
       <tr>
-        <th style="width:44px">#</th>
-        <th onclick="sortBy('fecha')">Fecha <span class="sort-arrow">↕</span></th>
-        <th onclick="sortBy('molde')">Molde <span class="sort-arrow">↕</span></th>
-        <th onclick="sortBy('inspector')">Inspector <span class="sort-arrow">↕</span></th>
+        <th style="width:40px">#</th>
+        <th onclick="sortBy('fecha')">Fecha <span class="sa">↕</span></th>
+        <th onclick="sortBy('molde')">Molde <span class="sa">↕</span></th>
+        <th onclick="sortBy('inspector')">Inspector <span class="sa">↕</span></th>
         <th>Problema</th>
         <th>Tarea</th>
-        <th onclick="sortBy('prioridad')">Prioridad <span class="sort-arrow">↕</span></th>
+        <th onclick="sortBy('prioridad')">Prioridad <span class="sa">↕</span></th>
         <th>Técnico</th>
         <th>Est. Repuestos</th>
         <th>Estado</th>
@@ -374,172 +259,167 @@
 
 <footer>
   <span id="footer-count">—</span>
-  <div class="footer-right">
-    <span>Datos desde Google Sheets · Solo lectura</span>
+  <div style="display:flex;gap:16px;align-items:center">
+    <span>Google Sheets · en vivo</span>
     <span id="footer-time">—</span>
+    <span id="saving-ind" style="display:none"><span class="saving-indicator"></span> Guardando…</span>
   </div>
 </footer>
 
 <div class="toast" id="toast"><span class="dot"></span><span id="toast-msg"></span></div>
 
-<div class="modal-backdrop" id="modal-detalle">
-  <div class="modal">
-    <h2 id="modal-title">Detalle del registro</h2>
-    <div class="modal-field"><label>Molde</label><input id="md-molde" readonly></div>
-    <div class="modal-field"><label>Problema</label><textarea id="md-problema" readonly></textarea></div>
-    <div class="modal-field"><label>Inspector</label><input id="md-inspector" readonly></div>
-    <div class="modal-field"><label>Fecha</label><input id="md-fecha" readonly></div>
-    <div class="modal-field"><label>Prioridad</label>
-      <select id="md-prioridad">
-        <option value="">Sin prioridad</option>
-        <option value="P. Alta">Alta</option>
-        <option value="P. Media">Media</option>
-        <option value="P. Baja">Baja</option>
-        <option value="P.0">P.0</option>
-      </select>
-    </div>
-    <div class="modal-field"><label>Técnico asignado</label><select id="md-tecnico"></select></div>
-    <div class="modal-field"><label>Estado</label>
-      <select id="md-estado">
-        <option value="">—</option>
-        <option value="No iniciada">No iniciada</option>
-        <option value="En curso">En curso</option>
-        <option value="Bloqueada">Bloqueada</option>
-        <option value="Completada">Completada</option>
-      </select>
-    </div>
-    <div class="modal-field"><label>Notas</label><textarea id="md-notas"></textarea></div>
-    <div class="modal-actions">
-      <button class="btn" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn primary" onclick="guardarModal()">Guardar cambios</button>
-    </div>
-  </div>
-</div>
-
 <script>
-const TECNICOS = ['Aarón Oropeza','Christian Rocco','Daniel Serpa','Francisco Romero','Omar García','Rodrigo Iturriaga'];
-
-const SHEET_ID = '1DGAoOPCGu2Adre_ckkcfvX4ZDTwNrT1-JsGvqbYGunY';
-const API_KEY  = 'AIzaSyCPJPizmB7-ji8LeXIlAgVrnHx4bcMblBM';
-const SHEET_TAB = 'Tareas Moldes1';
+// ── CONFIG ──────────────────────────────────────────────
+const CLIENT_ID  = '383025085004-l9dai8gv5758difsn66mt956fddpro4d.apps.googleusercontent.com';
+const API_KEY    = 'AIzaSyCPJPizmB7-ji8LeXIlAgVrnHx4bcMblBM';
+const SHEET_ID   = '1DGAoOPCGu2Adre_ckkcfvX4ZDTwNrT1-JsGvqbYGunY';
+const SHEET_TAB  = 'Tareas Moldes1';
+const SCOPES     = 'https://www.googleapis.com/auth/spreadsheets';
+const TECNICOS   = ['Aarón Oropeza','Christian Rocco','Daniel Serpa','Francisco Romero','Omar García','Rodrigo Iturriaga'];
 
 const CRITICOS = new Set([
-  'Caja Organizadora 140 lts. - Base',
-  'Caja Organizadora 140 lts. - Tapa',
-  'Caja Organizadora 20 lts. - Base',
-  'Caja Organizadora 30 lts. - Base',
-  'Caja Ratan 50 lts. - Base',
-  'Caja Ratan 50 lts. - Tapa',
-  'Canasta Rectangular',
-  'Cesto de Ropa II',
-  'Macetero Cuadrado 30 cm',
-  'Macetero Cuadrado 40 cm',
-  'Macetero Redondo 30 cm',
-  'Macetero Redondo 40 cm',
-  'Papelero v/v 15 lts. - Base',
-  'Papelero v/v 15 lts. - Tapa Recta',
-  'Papelero v/v 15 lts. - Vaiven',
-  'Papelero v/v 30 lts. - Base',
-  'Papelero v/v 30 lts. - Tapa Recta',
-  'Papelero v/v 30 lts. - Vaiven',
-  'Papelero v/v 60 lts. - Base',
-  'Papelero v/v 60 lts. - Tapa Recta',
-  'Papelero v/v 60 lts. - Vaiven',
-  'Papelero v/v 7 lts. - Base',
-  'Papelero v/v 7 lts. - Tapa Recta',
-  'Papelero v/v 7 lts. - Vaiven',
+  'Caja Organizadora 140 lts. - Base','Caja Organizadora 140 lts. - Tapa',
+  'Caja Organizadora 20 lts. - Base','Caja Organizadora 30 lts. - Base',
+  'Caja Ratan 50 lts. - Base','Caja Ratan 50 lts. - Tapa',
+  'Canasta Rectangular','Cesto de Ropa II',
+  'Macetero Cuadrado 30 cm','Macetero Cuadrado 40 cm',
+  'Macetero Redondo 30 cm','Macetero Redondo 40 cm',
+  'Papelero v/v 15 lts. - Base','Papelero v/v 15 lts. - Tapa Recta','Papelero v/v 15 lts. - Vaiven',
+  'Papelero v/v 30 lts. - Base','Papelero v/v 30 lts. - Tapa Recta','Papelero v/v 30 lts. - Vaiven',
+  'Papelero v/v 60 lts. - Base','Papelero v/v 60 lts. - Tapa Recta','Papelero v/v 60 lts. - Vaiven',
+  'Papelero v/v 7 lts. - Base','Papelero v/v 7 lts. - Tapa Recta','Papelero v/v 7 lts. - Vaiven',
 ]);
 
-let datos = [];
-let sortCol = 'fecha', sortDir = 1;
-let modalIdx = -1;
+// Col indices en la hoja (0-based): A=0,B=1,...,L=11
+// A=fecha, B=molde, C=inspector, D=problema, E=tarea,
+// F=prioridad, G=tecnico, H=estRep, I=estado, J=fechaIni, K=fechaFin, L=notas
+const COL = { tarea:4, prioridad:5, tecnico:6, estRep:7, estado:8, fechaIni:9, fechaFin:10, notas:11 };
 
+// ── STATE ────────────────────────────────────────────────
+let tokenClient, accessToken = null;
+let datos = [], sortCol = 'fecha', sortDir = 1;
+let pendingSave = {}; // rowIdx -> {field: value}
+
+// ── AUTH ─────────────────────────────────────────────────
+function iniciarLogin() {
+  tokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
+function cerrarSesion() {
+  google.accounts.oauth2.revoke(accessToken, () => {});
+  accessToken = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('header-user').style.display = 'none';
+}
+
+// ── HELPERS ──────────────────────────────────────────────
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 function parseFecha(s) {
-  const p = s.split('/');
-  if (p.length !== 3) return new Date(0);
-  return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+  const p = (s||'').split('/');
+  if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+  // also handle "DD/MM/YYYY HH:MM:SS"
+  const p2 = (s||'').split(' ')[0].split('/');
+  if (p2.length === 3) return new Date(parseInt(p2[2]), parseInt(p2[1])-1, parseInt(p2[0]));
+  return new Date(0);
 }
 function priOrder(p) {
-  if (p==='P. Alta') return 1; if (p==='P. Media') return 2;
-  if (p==='P. Baja') return 3; if (p==='P.0') return 4; return 5;
+  return p==='P. Alta'?1:p==='P. Media'?2:p==='P. Baja'?3:p==='P.0'?4:5;
+}
+function showToast(msg, err) {
+  const el = document.getElementById('toast');
+  el.className = 'toast' + (err?' err':'');
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2500);
+}
+function setSaving(on) {
+  document.getElementById('saving-ind').style.display = on ? 'inline-flex' : 'none';
 }
 
-function mostrarEstadoCarga(msg, esError) {
-  const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '<tr class="empty-row"><td colspan="13" style="color:'+(esError?'var(--alta)':'var(--text3)')+'">'+msg+'</td></tr>';
-}
-
+// ── LOAD DATA ────────────────────────────────────────────
 async function cargar() {
-  mostrarEstadoCarga('Cargando datos desde Google Sheets…');
+  document.getElementById('tbody').innerHTML =
+    '<tr class="empty-row"><td colspan="13" style="color:var(--text3)">Cargando datos…</td></tr>';
   const range = encodeURIComponent(SHEET_TAB + '!A:L');
-  const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID
-            + '/values/' + range + '?key=' + API_KEY;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: accessToken ? { Authorization: 'Bearer ' + accessToken } : {}
+    });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const json = await res.json();
-    const rows = json.values || [];
-    // Fila 0 = encabezados, saltar
-    const dataRows = rows.slice(1).filter(r => r && r.length > 1);
-    // Columnas: A=Marca temporal, B=Nombre Molde, C=Inspector, D=Problema,
-    //           E=Tarea, F=Prioridad, G=Técnico, H=Estado Repuestos,
-    //           I=Estado, J=Fecha Inicio, K=Fecha Finalización, L=Notas
-    datos = dataRows.map((r, i) => ({
-      id:        i,
-      fecha:     (r[0] || '').trim(),
-      molde:     (r[1] || '').trim(),
-      inspector: (r[2] || '').trim(),
-      problema:  (r[3] || '').trim(),
-      tarea:     (r[4] || '').trim(),
-      prioridad: (r[5] || '').trim(),
-      tecnico:   (r[6] || '').trim(),
-      estRep:    (r[7] || '').trim(),
-      estado:    (r[8] || '').trim(),
-      fechaIni:  (r[9] || '').trim(),
-      fechaFin:  (r[10] || '').trim(),
-      notas:     (r[11] || '').trim(),
+    const rows = (json.values || []).slice(1).filter(r => r && r.length > 1);
+    datos = rows.map((r, i) => ({
+      rowIdx: i + 2, // fila real en sheet (1=header, 2=primera data)
+      fecha:     (r[0]||'').trim(),
+      molde:     (r[1]||'').trim(),
+      inspector: (r[2]||'').trim(),
+      problema:  (r[3]||'').trim(),
+      tarea:     (r[4]||'').trim(),
+      prioridad: (r[5]||'').trim(),
+      tecnico:   (r[6]||'').trim(),
+      estRep:    (r[7]||'').trim(),
+      estado:    (r[8]||'').trim(),
+      fechaIni:  (r[9]||'').trim(),
+      fechaFin:  (r[10]||'').trim(),
+      notas:     (r[11]||'').trim(),
     }));
     document.getElementById('footer-time').textContent =
       'Actualizado ' + new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
     poblarFiltros();
     render();
-    requestAnimationFrame(() => { ajustarTheadTop(); setTimeout(ajustarTheadTop, 300); });
+    requestAnimationFrame(()=>{ ajustarTheadTop(); setTimeout(ajustarTheadTop,300); });
   } catch(e) {
-    mostrarEstadoCarga('Error al cargar datos: ' + e.message + '. Verifica que la hoja sea pública y el nombre de la pestaña sea correcto.', true);
-    console.error(e);
+    document.getElementById('tbody').innerHTML =
+      `<tr class="empty-row"><td colspan="13" style="color:var(--alta)">Error al cargar: ${e.message}</td></tr>`;
   }
 }
 
-function guardar() {
-  // Los datos vienen de Google Sheets — no se guardan localmente
+// ── SAVE CELL ────────────────────────────────────────────
+async function guardarCelda(rowIdx, colIdx, valor) {
+  if (!accessToken) { showToast('Debes iniciar sesión para editar', true); return; }
+  setSaving(true);
+  // Convertir colIdx a letra: 0=A, 1=B, ...
+  const colLetra = String.fromCharCode(65 + colIdx);
+  const range = `${SHEET_TAB}!${colLetra}${rowIdx}`;
+  try {
+    const res = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
+      {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ range, majorDimension: 'ROWS', values: [[valor]] })
+      }
+    );
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || 'HTTP ' + res.status);
+    }
+    showToast('Guardado en Sheets ✓');
+  } catch(e) {
+    showToast('Error al guardar: ' + e.message, true);
+  } finally {
+    setSaving(false);
+  }
 }
 
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  document.getElementById('toast-msg').textContent = msg;
-  el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'), 2200);
-}
-
+// ── FILTERS ──────────────────────────────────────────────
 function poblarFiltros() {
-  const inspectores = [...new Set(datos.map(d=>d.inspector))].sort();
   const selI = document.getElementById('f-inspector');
-  inspectores.forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; selI.appendChild(o); });
-
-  const moldes = [...new Set(datos.map(d=>d.molde))].sort();
   const selM = document.getElementById('f-molde');
-  moldes.forEach(m => { const o=document.createElement('option'); o.value=m; o.textContent=m; selM.appendChild(o); });
-
   const selT = document.getElementById('f-tecnico');
-  TECNICOS.forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; selT.appendChild(o); });
-}
+  // reset
+  while(selI.options.length>1) selI.remove(1);
+  while(selM.options.length>1) selM.remove(1);
+  while(selT.options.length>2) selT.remove(2);
 
-function sortBy(col) {
-  if (sortCol===col) sortDir*=-1; else { sortCol=col; sortDir=1; }
-  document.querySelectorAll('th').forEach(th=>th.classList.remove('sorted'));
-  const idx = {fecha:1,molde:2,inspector:3,prioridad:5};
-  if (idx[col]!==undefined) document.querySelectorAll('th')[idx[col]].classList.add('sorted');
-  render();
+  [...new Set(datos.map(d=>d.inspector))].filter(Boolean).sort()
+    .forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; selI.appendChild(o); });
+  [...new Set(datos.map(d=>d.molde))].filter(Boolean).sort()
+    .forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; selM.appendChild(o); });
+  TECNICOS.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; selT.appendChild(o); });
 }
 
 function getFilters() {
@@ -567,17 +447,29 @@ function filtrar(f) {
   });
 }
 
-function esc(s) {
-  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function limpiarFiltros() {
+  ['f-inspector','f-molde','f-tecnico','f-prioridad','f-estado'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-buscar').value='';
+  render();
 }
 
+// ── SORT ─────────────────────────────────────────────────
+function sortBy(col) {
+  sortDir = sortCol===col ? sortDir*-1 : 1;
+  sortCol = col;
+  document.querySelectorAll('th').forEach(th=>th.classList.remove('sorted'));
+  const idx={fecha:1,molde:2,inspector:3,prioridad:6};
+  if(idx[col]!=null) document.querySelectorAll('th')[idx[col]].classList.add('sorted');
+  render();
+}
+
+// ── RENDER ───────────────────────────────────────────────
 function render() {
   const f = getFilters();
-  let filtered = filtrar(f);
-
-  filtered.sort((a,b) => {
-    if (sortCol==='fecha') return (parseFecha(a.fecha)-parseFecha(b.fecha))*sortDir;
-    if (sortCol==='prioridad') return (priOrder(a.prioridad)-priOrder(b.prioridad))*sortDir;
+  let list = filtrar(f);
+  list.sort((a,b)=>{
+    if(sortCol==='fecha') return (parseFecha(a.fecha)-parseFecha(b.fecha))*sortDir;
+    if(sortCol==='prioridad') return (priOrder(a.prioridad)-priOrder(b.prioridad))*sortDir;
     return ((a[sortCol]||'').localeCompare(b[sortCol]||''))*sortDir;
   });
 
@@ -587,164 +479,172 @@ function render() {
   document.getElementById('stat-ni').textContent = datos.filter(d=>d.estado==='No iniciada').length;
   document.getElementById('stat-sinasig').textContent = datos.filter(d=>!d.tecnico).length;
   document.getElementById('footer-count').textContent =
-    filtered.length===total ? `${total} registros` : `${filtered.length} de ${total} registros`;
+    list.length===total ? `${total} registros` : `${list.length} de ${total} registros`;
 
+  const canEdit = !!accessToken;
   const tbody = document.getElementById('tbody');
-  if (!filtered.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Sin resultados para los filtros aplicados.</td></tr>';
+
+  if (!list.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Sin resultados.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = filtered.map((d,i) => {
+  // Opciones de selects
+  const priOpts = ['','P. Alta','P. Media','P. Baja','P.0'];
+  const estOpts = ['','No iniciada','En curso','Bloqueada','Completada'];
+  const repOpts = ['','Pendiente','Solicitado','Recibido','No requiere'];
+  const tecOpts = ['', ...TECNICOS];
+
+  tbody.innerHTML = list.map((d,i) => {
     const priC = d.prioridad==='P. Alta'?'pri-alta':d.prioridad==='P. Media'?'pri-media':d.prioridad==='P. Baja'?'pri-baja':d.prioridad==='P.0'?'pri-p0':'';
-    const estC = d.estado==='No iniciada'?'ni':d.estado==='En curso'?'curso':d.estado==='Bloqueada'?'bloq':d.estado==='Completada'?'done':'';
+    const estC = d.estado==='No iniciada'?'est-ni':d.estado==='En curso'?'est-curso':d.estado==='Bloqueada'?'est-bloq':d.estado==='Completada'?'est-done':'';
+
+    if (!canEdit) {
+      // Solo lectura
+      return `<tr>
+        <td class="num">${i+1}</td>
+        <td class="fecha">${esc(d.fecha)}</td>
+        <td class="molde${CRITICOS.has(d.molde)?' critico':''}">${esc(d.molde)}</td>
+        <td class="inspector">${esc(d.inspector)}</td>
+        <td class="ro"><span title="${esc(d.problema)}">${esc(d.problema)}</span></td>
+        <td class="ro">${esc(d.tarea)}</td>
+        <td><span class="badge-pri ${priC}">${esc(d.prioridad)||'—'}</span></td>
+        <td class="inspector">${esc(d.tecnico)||'—'}</td>
+        <td class="inspector">${esc(d.estRep)||'—'}</td>
+        <td><span class="badge-est ${estC}">${esc(d.estado)||'—'}</span></td>
+        <td class="fecha">${esc(d.fechaIni)}</td>
+        <td class="fecha">${esc(d.fechaFin)}</td>
+        <td class="ro">${esc(d.notas)}</td>
+      </tr>`;
+    }
+
+    // Editable
+    const ri = d.rowIdx;
+    const mkSel = (field, opts, val, extraClass) => {
+      const cls = extraClass ? `cell-select ${extraClass}` : 'cell-select';
+      return `<select class="${cls}" onchange="onCellChange(this,${ri},${COL[field]},event)">
+        ${opts.map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${o||'—'}</option>`).join('')}
+      </select>`;
+    };
+    const mkTxt = (field, val, placeholder) =>
+      `<input type="text" class="cell-edit" value="${esc(val)}" placeholder="${placeholder||''}"
+        onblur="onCellChange(this,${ri},${COL[field]},event)"
+        onkeydown="if(event.key==='Enter'){this.blur();}">`;
+    const mkDate = (field, val) =>
+      `<input type="date" class="cell-edit" value="${esc(val)}"
+        onchange="onCellChange(this,${ri},${COL[field]},event)">`;
+
+    const tecVal = d.tecnico ? 'tec-val' : '';
+
     return `<tr>
       <td class="num">${i+1}</td>
       <td class="fecha">${esc(d.fecha)}</td>
       <td class="molde${CRITICOS.has(d.molde)?' critico':''}">${esc(d.molde)}</td>
       <td class="inspector">${esc(d.inspector)}</td>
-      <td class="problema"><span title="${esc(d.problema)}">${esc(d.problema)}</span></td>
-      <td class="problema"><span title="${esc(d.tarea)}">${esc(d.tarea)}</span></td>
-      <td><span class="badge-pri ${priC}">${esc(d.prioridad)||'—'}</span></td>
-      <td class="inspector">${esc(d.tecnico)||'—'}</td>
-      <td class="inspector">${esc(d.estRep)||'—'}</td>
-      <td><span class="badge-est ${estC}">${esc(d.estado)||'—'}</span></td>
-      <td class="fecha">${esc(d.fechaIni)}</td>
-      <td class="fecha">${esc(d.fechaFin)}</td>
-      <td class="problema">${esc(d.notas)}</td>
+      <td class="ro"><span title="${esc(d.problema)}">${esc(d.problema)}</span></td>
+      <td style="min-width:160px">${mkTxt('tarea', d.tarea, 'Agregar tarea…')}</td>
+      <td style="min-width:100px">${mkSel('prioridad', priOpts, d.prioridad, priC)}</td>
+      <td style="min-width:140px">${mkSel('tecnico', tecOpts, d.tecnico, tecVal)}</td>
+      <td style="min-width:120px">${mkSel('estRep', repOpts, d.estRep, '')}</td>
+      <td style="min-width:110px">${mkSel('estado', estOpts, d.estado, estC)}</td>
+      <td style="min-width:130px">${mkDate('fechaIni', d.fechaIni)}</td>
+      <td style="min-width:130px">${mkDate('fechaFin', d.fechaFin)}</td>
+      <td style="min-width:160px">${mkTxt('notas', d.notas, 'Agregar nota…')}</td>
     </tr>`;
   }).join('');
 }
 
-function cambiarPrioridad(el) {
-  const d = datos.find(x=>x.id===parseInt(el.dataset.id));
-  if (!d) return;
-  d.prioridad = el.value;
-  const c = d.prioridad==='P. Alta'?'pri-alta':d.prioridad==='P. Media'?'pri-media':d.prioridad==='P. Baja'?'pri-baja':d.prioridad==='P.0'?'pri-p0':'';
-  el.className = 'pri-select ' + c;
-  guardar();
-  actualizarStats();
-  showToast('Prioridad actualizada');
+// ── CELL CHANGE ──────────────────────────────────────────
+function onCellChange(el, rowIdx, colIdx, event) {
+  const valor = el.value;
+  // Actualizar dato local
+  const d = datos.find(x=>x.rowIdx===rowIdx);
+  if (d) {
+    const fieldMap = Object.entries(COL).find(([,v])=>v===colIdx);
+    if (fieldMap) d[fieldMap[0]] = valor;
+    // Actualizar clase del select si es prioridad/estado/tecnico
+    if (colIdx === COL.prioridad) {
+      const c = valor==='P. Alta'?'pri-alta':valor==='P. Media'?'pri-media':valor==='P. Baja'?'pri-baja':valor==='P.0'?'pri-p0':'';
+      el.className = 'cell-select ' + c;
+    }
+    if (colIdx === COL.estado) {
+      const c = valor==='No iniciada'?'est-ni':valor==='En curso'?'est-curso':valor==='Bloqueada'?'est-bloq':valor==='Completada'?'est-done':'';
+      el.className = 'cell-select ' + c;
+    }
+    if (colIdx === COL.tecnico) {
+      el.className = 'cell-select' + (valor?' tec-val':'');
+    }
+    // Actualizar stats
+    document.getElementById('stat-alta').textContent = datos.filter(x=>x.prioridad==='P. Alta').length;
+    document.getElementById('stat-ni').textContent = datos.filter(x=>x.estado==='No iniciada').length;
+    document.getElementById('stat-sinasig').textContent = datos.filter(x=>!x.tecnico).length;
+  }
+  guardarCelda(rowIdx, colIdx, valor);
 }
 
-function cambiarCampo(el) {
-  const d = datos.find(x=>x.id===parseInt(el.dataset.id));
-  if (!d) return;
-  d[el.dataset.field] = el.value;
-  if (el.dataset.field==='tecnico') el.className = 'assign-select' + (el.value?' has-value':'');
-  guardar();
-  actualizarStats();
-  showToast('Cambio guardado');
+// ── THEAD TOP ────────────────────────────────────────────
+function ajustarTheadTop() {
+  const toolbar = document.querySelector('.toolbar');
+  if (!toolbar) return;
+  document.querySelector('thead').style.top = Math.round(toolbar.getBoundingClientRect().bottom) + 'px';
 }
 
-function cambiarEstado(el) {
-  const d = datos.find(x=>x.id===parseInt(el.dataset.id));
-  if (!d) return;
-  d.estado = el.value;
-  const c = d.estado==='No iniciada'?'ni':d.estado==='En curso'?'curso':d.estado==='Bloqueada'?'bloq':d.estado==='Completada'?'done':'';
-  el.className = 'status-select ' + c;
-  guardar();
-  actualizarStats();
-  showToast('Estado actualizado');
-}
-
-function actualizarStats() {
-  document.getElementById('stat-alta').textContent = datos.filter(d=>d.prioridad==='P. Alta').length;
-  document.getElementById('stat-ni').textContent = datos.filter(d=>d.estado==='No iniciada').length;
-  document.getElementById('stat-sinasig').textContent = datos.filter(d=>!d.tecnico).length;
-}
-
+// ── RELOAD & CSV ─────────────────────────────────────────
 function recargar() {
-  // Limpiar filtros y datos antes de recargar
-  ['f-inspector','f-molde','f-tecnico','f-prioridad','f-estado'].forEach(id=>{
-    const el = document.getElementById(id);
-    // Dejar solo el primer option
-    while (el.options.length > 1) el.remove(1);
-    el.value = '';
-  });
-  document.getElementById('f-buscar').value = '';
+  poblarFiltros();
   cargar();
-}
-
-function limpiarFiltros() {
-  ['f-inspector','f-molde','f-tecnico','f-prioridad','f-estado'].forEach(id=>{document.getElementById(id).value='';});
-  document.getElementById('f-buscar').value = '';
-  render();
-}
-
-function abrirModal(id) {
-  const d = datos.find(x=>x.id===id);
-  if (!d) return;
-  modalIdx = id;
-  document.getElementById('modal-title').textContent = d.molde;
-  document.getElementById('md-molde').value = d.molde;
-  document.getElementById('md-problema').value = d.problema;
-  document.getElementById('md-inspector').value = d.inspector;
-  document.getElementById('md-fecha').value = d.fecha;
-  document.getElementById('md-prioridad').value = d.prioridad||'';
-  document.getElementById('md-estado').value = d.estado||'';
-  document.getElementById('md-notas').value = d.notas||'';
-  const selT = document.getElementById('md-tecnico');
-  selT.innerHTML = ['', ...TECNICOS].map(t=>`<option value="${t}" ${d.tecnico===t?'selected':''}>${t||'— Sin asignar'}</option>`).join('');
-  document.getElementById('modal-detalle').classList.add('open');
-}
-
-function cerrarModal() {
-  document.getElementById('modal-detalle').classList.remove('open');
-  modalIdx = -1;
-}
-
-function guardarModal() {
-  const d = datos.find(x=>x.id===modalIdx);
-  if (!d) return;
-  d.prioridad = document.getElementById('md-prioridad').value;
-  d.tecnico   = document.getElementById('md-tecnico').value;
-  d.estado    = document.getElementById('md-estado').value;
-  d.notas     = document.getElementById('md-notas').value;
-  guardar();
-  cerrarModal();
-  render();
-  showToast('Registro actualizado');
 }
 
 function guardarCSV() {
   const f = getFilters();
-  const filtered = filtrar(f);
+  const list = filtrar(f);
   const cols = ['Fecha','Molde','Inspector','Problema','Tarea','Prioridad','Técnico','Est. Repuestos','Estado','Fecha Inicio','Fecha Fin','Notas'];
-  const csv = [cols.join(';'), ...filtered.map(d =>
+  const csv = [cols.join(';'), ...list.map(d=>
     [d.fecha,d.molde,d.inspector,d.problema,d.tarea,d.prioridad,d.tecnico,d.estRep,d.estado,d.fechaIni,d.fechaFin,d.notas]
       .map(v=>`"${(v||'').replace(/"/g,'""')}"`)
       .join(';')
   )].join('\n');
   const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href=url; a.download='moldes_tareas.csv'; a.click();
-  URL.revokeObjectURL(url);
-  showToast('CSV exportado');
+  a.href = URL.createObjectURL(blob); a.download='moldes_tareas.csv'; a.click();
 }
 
-function ajustarTheadTop() {
-  const toolbar = document.querySelector('.toolbar');
-  if (!toolbar) return;
-  const bottom = toolbar.getBoundingClientRect().bottom;
-  document.querySelector('thead').style.top = Math.round(bottom) + 'px';
-}
+// ── GOOGLE IDENTITY ──────────────────────────────────────
+window.onload = function() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { showToast('Error de autenticación: ' + resp.error, true); return; }
+      accessToken = resp.access_token;
+      // Mostrar info usuario
+      try {
+        const me = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
+          { headers: { Authorization: 'Bearer ' + accessToken } }).then(r=>r.json());
+        document.getElementById('user-name').textContent = me.name || me.email;
+        if (me.picture) document.getElementById('user-avatar').src = me.picture;
+        document.getElementById('header-user').style.display = 'flex';
+      } catch(e) {}
+      document.getElementById('login-screen').style.display = 'none';
+      cargar();
+    }
+  });
 
-// Init
-(async () => {
-  await cargar();
-})();
+  // Cargar datos públicos sin login primero
+  cargar();
 
-requestAnimationFrame(() => { ajustarTheadTop(); setTimeout(ajustarTheadTop, 100); setTimeout(ajustarTheadTop, 500); });
-window.addEventListener('load', ajustarTheadTop);
-window.addEventListener('resize', ajustarTheadTop);
+  // Event listeners filtros
+  ['f-inspector','f-molde','f-tecnico','f-prioridad','f-estado'].forEach(id =>
+    document.getElementById(id).addEventListener('change', render));
+  document.getElementById('f-buscar').addEventListener('input', render);
 
-['f-inspector','f-molde','f-tecnico','f-prioridad','f-estado'].forEach(id => {
-  document.getElementById(id).addEventListener('change', render);
-});
-document.getElementById('f-buscar').addEventListener('input', render);
-document.getElementById('modal-detalle').addEventListener('click', function(e){ if(e.target===this) cerrarModal(); });
+  requestAnimationFrame(()=>{ ajustarTheadTop(); setTimeout(ajustarTheadTop,300); });
+  window.addEventListener('load', ajustarTheadTop);
+  window.addEventListener('resize', ajustarTheadTop);
+};
 </script>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
 </html>
