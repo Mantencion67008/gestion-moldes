@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Moldes — Tareas de Mantenimiento</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c25;
+    --surface2: #1e2330;
+    --border: #2a3040;
+    --border2: #3a4460;
+    --text: #e4e8f0;
+    --text2: #8a93a8;
+    --text3: #5a6278;
+    --accent: #3a7bd5;
+    --alta: #e05252;
+    --alta-bg: rgba(224,82,82,0.12);
+    --media: #d4933a;
+    --media-bg: rgba(212,147,58,0.12);
+    --baja: #4ca87a;
+    --baja-bg: rgba(76,168,122,0.12);
+    --p0: #7a6fcf;
+    --p0-bg: rgba(122,111,207,0.12);
+    --font: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --radius: 4px;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; min-height: 100vh; overflow-x: auto; }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-logo { font-family: var(--mono); font-size: 12px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+  .header-title { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+  .header-stats { display: flex; gap: 20px; }
+  .header-stat { display: flex; flex-direction: column; align-items: flex-end; }
+  .header-stat-val { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--text); line-height: 1; }
+  .header-stat-val.red { color: var(--alta); }
+  .header-stat-val.blue { color: var(--accent); }
+  .header-stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+  .toolbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 24px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    position: sticky;
+    top: 52px;
+    z-index: 90;
+  }
+  .toolbar-group { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .toolbar-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+
+  select, input[type="text"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 5px 8px;
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 0.15s;
+    height: 30px;
+    max-width: 160px;
+  }
+  select:focus, input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"] { width: 180px; max-width: 180px; }
+
+  .btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: var(--font);
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    height: 30px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+  .btn.primary:hover { background: #2e65b8; border-color: #2e65b8; }
+  .divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
+
+  .main { padding: 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1100px; }
+
+  thead { position: sticky; top: 0; z-index: 50; }
+
+  th {
+    background: var(--surface2);
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  th:hover { color: var(--text); background: var(--border); }
+  th.sorted { color: var(--accent); }
+  th .sort-arrow { margin-left: 4px; opacity: 0.5; }
+  th.sorted .sort-arrow { opacity: 1; }
+
+  td { padding: 7px 12px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); vertical-align: middle; color: var(--text); }
+  tr:hover td { background: var(--surface2); }
+
+  td.num { font-family: var(--mono); font-size: 11px; color: var(--text3); width: 44px; text-align: right; padding-right: 14px; }
+  td.fecha { font-family: var(--mono); font-size: 11px; color: var(--text2); white-space: nowrap; width: 90px; }
+  td.molde { font-weight: 500; max-width: 200px; }
+  td.molde.critico { color: var(--alta); }
+  td.inspector { color: var(--text2); white-space: nowrap; max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
+  td.problema { color: var(--text2); max-width: 260px; }
+  td.problema span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .badge-pri, .badge-est {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .badge-pri.pri-alta  { border-color: var(--alta);  color: var(--alta); }
+  .badge-pri.pri-media { border-color: var(--media); color: var(--media); }
+  .badge-pri.pri-baja  { border-color: var(--baja);  color: var(--baja); }
+  .badge-pri.pri-p0    { border-color: var(--p0);    color: var(--p0); }
+  .badge-est.ni   { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .badge-est.curso{ border-color: var(--media);  color: var(--media); }
+  .badge-est.bloq { border-color: var(--alta);   color: var(--alta); }
+  .badge-est.done { border-color: var(--baja);   color: var(--baja); }
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    outline: none;
+    width: 100%;
+    min-width: 90px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    letter-spacing: 0.04em;
+    height: auto;
+  }
+  .pri-select.pri-alta  { border-color: var(--alta);  color: var(--alta); }
+  .pri-select.pri-media { border-color: var(--media); color: var(--media); }
+  .pri-select.pri-baja  { border-color: var(--baja);  color: var(--baja); }
+  .pri-select.pri-p0    { border-color: var(--p0);    color: var(--p0); }
+
+  .assign-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    padding: 3px 6px;
+    border-radius: var(--radius);
+    outline: none;
+    width: 100%;
+    min-width: 130px;
+    transition: border-color 0.15s;
+    height: auto;
+  }
+  .assign-select:focus { border-color: var(--accent); }
+  .assign-select.has-value { color: var(--accent); font-weight: 500; }
+
+  .status-select {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    outline: none;
+    width: 100%;
+    min-width: 110px;
+    cursor: pointer;
+    height: auto;
+  }
+  .status-select.ni   { border-color: var(--accent); color: var(--accent); }
+  .status-select.curso{ border-color: var(--media);  color: var(--media); }
+  .status-select.bloq { border-color: var(--alta);   color: var(--alta); }
+  .status-select.done { border-color: var(--baja);   color: var(--baja); }
+
+  .notes-input {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text2);
+    font-family: var(--font);
+    font-size: 12px;
+    padding: 3px 6px;
+    border-radius: var(--radius);
+    outline: none;
+    width: 100%;
+    min-width: 140px;
+    transition: border-color 0.15s;
+    height: auto;
+  }
+  .notes-input:hover { border-color: var(--border); }
+  .notes-input:focus { border-color: var(--accent); background: var(--surface2); color: var(--text); }
+
+  .empty-row td { text-align: center; padding: 48px; color: var(--text3); font-size: 13px; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--text); padding: 10px 18px; border-radius: var(--radius);
+    font-size: 13px; z-index: 999; opacity: 0; transform: translateY(8px);
+    transition: all 0.2s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--baja); margin-right: 8px; vertical-align: middle; }
+
+  footer {
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 8px 24px; display: flex; align-items: center;
+    justify-content: space-between; font-family: var(--mono);
+    font-size: 11px; color: var(--text3);
+    position: sticky; bottom: 0; z-index: 100;
+  }
+  .footer-right { display: flex; gap: 16px; }
+
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 6px; padding: 24px; width: 480px; max-width: 95vw; }
+  .modal h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+  .modal-field { margin-bottom: 12px; }
+  .modal-field label { display: block; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .modal-field input, .modal-field select, .modal-field textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--font); font-size: 13px; padding: 7px 10px; border-radius: var(--radius); outline: none; height: auto;
+  }
+  .modal-field textarea { resize: vertical; height: 70px; }
+  .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="header-logo">Planta / Moldes</span>
+  <span class="header-title">Gestión de Tareas de Mantenimiento</span>
+  <div class="header-stats">
+    <div class="header-stat">
+      <span class="header-stat-val" id="stat-total">—</span>
+      <span class="header-stat-label">Registros</span>
+    </div>
+    <div class="header-stat">
+      <span class="header-stat-val red" id="stat-alta">—</span>
+      <span class="header-stat-label">P. Alta</span>
+    </div>
+    <div class="header-stat">
+      <span class="header-stat-val blue" id="stat-ni">—</span>
+      <span class="header-stat-label">No iniciadas</span>
+    </div>
+    <div class="header-stat">
+      <span class="header-stat-val" id="stat-sinasig">—</span>
+      <span class="header-stat-label">Sin asignar</span>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="toolbar-group">
+    <span class="toolbar-label">Inspector</span>
+    <select id="f-inspector"><option value="">Todos</option></select>
+  </div>
+  <div class="toolbar-group">
+    <span class="toolbar-label">Técnico</span>
+    <select id="f-tecnico">
+      <option value="">Todos</option>
+      <option value="__sin__">Sin asignar</option>
+    </select>
+  </div>
+  <div class="toolbar-group">
+    <span class="toolbar-label">Prioridad</span>
+    <select id="f-prioridad">
+      <option value="">Todas</option>
+      <option value="P. Alta">Alta</option>
+      <option value="P. Media">Media</option>
+      <option value="P. Baja">Baja</option>
+      <option value="P.0">P.0</option>
+      <option value="__sin__">Sin prioridad</option>
+    </select>
+  </div>
+  <div class="toolbar-group">
+    <span class="toolbar-label">Estado</span>
+    <select id="f-estado">
+      <option value="">Todos</option>
+      <option value="No iniciada">No iniciada</option>
+      <option value="En curso">En curso</option>
+      <option value="Bloqueada">Bloqueada</option>
+      <option value="Completada">Completada</option>
+    </select>
+  </div>
+  <div class="toolbar-group">
+    <span class="toolbar-label">Molde</span>
+    <select id="f-molde"><option value="">Todos</option></select>
+  </div>
+  <div class="toolbar-group">
+    <input type="text" id="f-buscar" placeholder="Buscar molde o problema…">
+  </div>
+  <div class="divider"></div>
+  <button class="btn" onclick="limpiarFiltros()">↺ Limpiar</button>
+  <button class="btn" onclick="recargar()">⟳ Recargar datos</button>
+  <button class="btn primary" onclick="guardarCSV()">↓ Exportar CSV</button>
+</div>
+
+<div class="main">
+  <table id="tabla">
+    <thead>
+      <tr>
+        <th style="width:44px">#</th>
+        <th onclick="sortBy('fecha')">Fecha <span class="sort-arrow">↕</span></th>
+        <th onclick="sortBy('molde')">Molde <span class="sort-arrow">↕</span></th>
+        <th onclick="sortBy('inspector')">Inspector <span class="sort-arrow">↕</span></th>
+        <th>Problema</th>
+        <th>Tarea</th>
+        <th onclick="sortBy('prioridad')">Prioridad <span class="sort-arrow">↕</span></th>
+        <th>Técnico</th>
+        <th>Est. Repuestos</th>
+        <th>Estado</th>
+        <th>Fecha Inicio</th>
+        <th>Fecha Fin</th>
+        <th>Notas</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<footer>
+  <span id="footer-count">—</span>
+  <div class="footer-right">
+    <span>Datos desde Google Sheets · Solo lectura</span>
+    <span id="footer-time">—</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast"><span class="dot"></span><span id="toast-msg"></span></div>
+
+<div class="modal-backdrop" id="modal-detalle">
+  <div class="modal">
+    <h2 id="modal-title">Detalle del registro</h2>
+    <div class="modal-field"><label>Molde</label><input id="md-molde" readonly></div>
+    <div class="modal-field"><label>Problema</label><textarea id="md-problema" readonly></textarea></div>
+    <div class="modal-field"><label>Inspector</label><input id="md-inspector" readonly></div>
+    <div class="modal-field"><label>Fecha</label><input id="md-fecha" readonly></div>
+    <div class="modal-field"><label>Prioridad</label>
+      <select id="md-prioridad">
+        <option value="">Sin prioridad</option>
+        <option value="P. Alta">Alta</option>
+        <option value="P. Media">Media</option>
+        <option value="P. Baja">Baja</option>
+        <option value="P.0">P.0</option>
+      </select>
+    </div>
+    <div class="modal-field"><label>Técnico asignado</label><select id="md-tecnico"></select></div>
+    <div class="modal-field"><label>Estado</label>
+      <select id="md-estado">
+        <option value="">—</option>
+        <option value="No iniciada">No iniciada</option>
+        <option value="En curso">En curso</option>
+        <option value="Bloqueada">Bloqueada</option>
+        <option value="Completada">Completada</option>
+      </select>
+    </div>
+    <div class="modal-field"><label>Notas</label><textarea id="md-notas"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn primary" onclick="guardarModal()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TECNICOS = ['Aarón Oropeza','Christian Rocco','Daniel Serpa','Francisco Romero','Omar García','Rodrigo Iturriaga'];
+
+const SHEET_ID = '1DGAoOPCGu2Adre_ckkcfvX4ZDTwNrT1-JsGvqbYGunY';
+const API_KEY  = 'AIzaSyCPJPizmB7-ji8LeXIlAgVrnHx4bcMblBM';
+const SHEET_TAB = 'Tareas Moldes1';
+
+const CRITICOS = new Set([
+  'Caja Organizadora 140 lts. - Base',
+  'Caja Organizadora 140 lts. - Tapa',
+  'Caja Organizadora 20 lts. - Base',
+  'Caja Organizadora 30 lts. - Base',
+  'Caja Ratan 50 lts. - Base',
+  'Caja Ratan 50 lts. - Tapa',
+  'Canasta Rectangular',
+  'Cesto de Ropa II',
+  'Macetero Cuadrado 30 cm',
+  'Macetero Cuadrado 40 cm',
+  'Macetero Redondo 30 cm',
+  'Macetero Redondo 40 cm',
+  'Papelero v/v 15 lts. - Base',
+  'Papelero v/v 15 lts. - Tapa Recta',
+  'Papelero v/v 15 lts. - Vaiven',
+  'Papelero v/v 30 lts. - Base',
+  'Papelero v/v 30 lts. - Tapa Recta',
+  'Papelero v/v 30 lts. - Vaiven',
+  'Papelero v/v 60 lts. - Base',
+  'Papelero v/v 60 lts. - Tapa Recta',
+  'Papelero v/v 60 lts. - Vaiven',
+  'Papelero v/v 7 lts. - Base',
+  'Papelero v/v 7 lts. - Tapa Recta',
+  'Papelero v/v 7 lts. - Vaiven',
+]);
+
+let datos = [];
+let sortCol = 'fecha', sortDir = 1;
+let modalIdx = -1;
+
+function parseFecha(s) {
+  const p = s.split('/');
+  if (p.length !== 3) return new Date(0);
+  return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+}
+function priOrder(p) {
+  if (p==='P. Alta') return 1; if (p==='P. Media') return 2;
+  if (p==='P. Baja') return 3; if (p==='P.0') return 4; return 5;
+}
+
+function mostrarEstadoCarga(msg, esError) {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="13" style="color:'+(esError?'var(--alta)':'var(--text3)')+'">'+msg+'</td></tr>';
+}
+
+async function cargar() {
+  mostrarEstadoCarga('Cargando datos desde Google Sheets…');
+  const range = encodeURIComponent(SHEET_TAB + '!A:L');
+  const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID
+            + '/values/' + range + '?key=' + API_KEY;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    const rows = json.values || [];
+    // Fila 0 = encabezados, saltar
+    const dataRows = rows.slice(1).filter(r => r && r.length > 1);
+    // Columnas: A=Marca temporal, B=Nombre Molde, C=Inspector, D=Problema,
+    //           E=Tarea, F=Prioridad, G=Técnico, H=Estado Repuestos,
+    //           I=Estado, J=Fecha Inicio, K=Fecha Finalización, L=Notas
+    datos = dataRows.map((r, i) => ({
+      id:        i,
+      fecha:     (r[0] || '').trim(),
+      molde:     (r[1] || '').trim(),
+      inspector: (r[2] || '').trim(),
+      problema:  (r[3] || '').trim(),
+      tarea:     (r[4] || '').trim(),
+      prioridad: (r[5] || '').trim(),
+      tecnico:   (r[6] || '').trim(),
+      estRep:    (r[7] || '').trim(),
+      estado:    (r[8] || '').trim(),
+      fechaIni:  (r[9] || '').trim(),
+      fechaFin:  (r[10] || '').trim(),
+      notas:     (r[11] || '').trim(),
+    }));
+    document.getElementById('footer-time').textContent =
+      'Actualizado ' + new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+    poblarFiltros();
+    render();
+    requestAnimationFrame(() => { ajustarTheadTop(); setTimeout(ajustarTheadTop, 300); });
+  } catch(e) {
+    mostrarEstadoCarga('Error al cargar datos: ' + e.message + '. Verifica que la hoja sea pública y el nombre de la pestaña sea correcto.', true);
+    console.error(e);
+  }
+}
+
+function guardar() {
+  // Los datos vienen de Google Sheets — no se guardan localmente
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+function poblarFiltros() {
+  const inspectores = [...new Set(datos.map(d=>d.inspector))].sort();
+  const selI = document.getElementById('f-inspector');
+  inspectores.forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; selI.appendChild(o); });
+
+  const moldes = [...new Set(datos.map(d=>d.molde))].sort();
+  const selM = document.getElementById('f-molde');
+  moldes.forEach(m => { const o=document.createElement('option'); o.value=m; o.textContent=m; selM.appendChild(o); });
+
+  const selT = document.getElementById('f-tecnico');
+  TECNICOS.forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; selT.appendChild(o); });
+}
+
+function sortBy(col) {
+  if (sortCol===col) sortDir*=-1; else { sortCol=col; sortDir=1; }
+  document.querySelectorAll('th').forEach(th=>th.classList.remove('sorted'));
+  const idx = {fecha:1,molde:2,inspector:3,prioridad:5};
+  if (idx[col]!==undefined) document.querySelectorAll('th')[idx[col]].classList.add('sorted');
+  render();
+}
+
+function getFilters() {
+  return {
+    inspector: document.getElementById('f-inspector').value,
+    molde:     document.getElementById('f-molde').value,
+    tecnico:   document.getElementById('f-tecnico').value,
+    prioridad: document.getElementById('f-prioridad').value,
+    estado:    document.getElementById('f-estado').value,
+    buscar:    document.getElementById('f-buscar').value.toLowerCase().trim()
+  };
+}
+
+function filtrar(f) {
+  return datos.filter(d => {
+    if (f.inspector && d.inspector !== f.inspector) return false;
+    if (f.molde && d.molde !== f.molde) return false;
+    if (f.tecnico === '__sin__' && d.tecnico) return false;
+    if (f.tecnico && f.tecnico !== '__sin__' && d.tecnico !== f.tecnico) return false;
+    if (f.prioridad === '__sin__' && d.prioridad) return false;
+    if (f.prioridad && f.prioridad !== '__sin__' && d.prioridad !== f.prioridad) return false;
+    if (f.estado && d.estado !== f.estado) return false;
+    if (f.buscar && !d.molde.toLowerCase().includes(f.buscar) && !d.problema.toLowerCase().includes(f.buscar)) return false;
+    return true;
+  });
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function render() {
+  const f = getFilters();
+  let filtered = filtrar(f);
+
+  filtered.sort((a,b) => {
+    if (sortCol==='fecha') return (parseFecha(a.fecha)-parseFecha(b.fecha))*sortDir;
+    if (sortCol==='prioridad') return (priOrder(a.prioridad)-priOrder(b.prioridad))*sortDir;
+    return ((a[sortCol]||'').localeCompare(b[sortCol]||''))*sortDir;
+  });
+
+  const total = datos.length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-alta').textContent = datos.filter(d=>d.prioridad==='P. Alta').length;
+  document.getElementById('stat-ni').textContent = datos.filter(d=>d.estado==='No iniciada').length;
+  document.getElementById('stat-sinasig').textContent = datos.filter(d=>!d.tecnico).length;
+  document.getElementById('footer-count').textContent =
+    filtered.length===total ? `${total} registros` : `${filtered.length} de ${total} registros`;
+
+  const tbody = document.getElementById('tbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Sin resultados para los filtros aplicados.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((d,i) => {
+    const priC = d.prioridad==='P. Alta'?'pri-alta':d.prioridad==='P. Media'?'pri-media':d.prioridad==='P. Baja'?'pri-baja':d.prioridad==='P.0'?'pri-p0':'';
+    const estC = d.estado==='No iniciada'?'ni':d.estado==='En curso'?'curso':d.estado==='Bloqueada'?'bloq':d.estado==='Completada'?'done':'';
+    return `<tr>
+      <td class="num">${i+1}</td>
+      <td class="fecha">${esc(d.fecha)}</td>
+      <td class="molde${CRITICOS.has(d.molde)?' critico':''}">${esc(d.molde)}</td>
+      <td class="inspector">${esc(d.inspector)}</td>
+      <td class="problema"><span title="${esc(d.problema)}">${esc(d.problema)}</span></td>
+      <td class="problema"><span title="${esc(d.tarea)}">${esc(d.tarea)}</span></td>
+      <td><span class="badge-pri ${priC}">${esc(d.prioridad)||'—'}</span></td>
+      <td class="inspector">${esc(d.tecnico)||'—'}</td>
+      <td class="inspector">${esc(d.estRep)||'—'}</td>
+      <td><span class="badge-est ${estC}">${esc(d.estado)||'—'}</span></td>
+      <td class="fecha">${esc(d.fechaIni)}</td>
+      <td class="fecha">${esc(d.fechaFin)}</td>
+      <td class="problema">${esc(d.notas)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function cambiarPrioridad(el) {
+  const d = datos.find(x=>x.id===parseInt(el.dataset.id));
+  if (!d) return;
+  d.prioridad = el.value;
+  const c = d.prioridad==='P. Alta'?'pri-alta':d.prioridad==='P. Media'?'pri-media':d.prioridad==='P. Baja'?'pri-baja':d.prioridad==='P.0'?'pri-p0':'';
+  el.className = 'pri-select ' + c;
+  guardar();
+  actualizarStats();
+  showToast('Prioridad actualizada');
+}
+
+function cambiarCampo(el) {
+  const d = datos.find(x=>x.id===parseInt(el.dataset.id));
+  if (!d) return;
+  d[el.dataset.field] = el.value;
+  if (el.dataset.field==='tecnico') el.className = 'assign-select' + (el.value?' has-value':'');
+  guardar();
+  actualizarStats();
+  showToast('Cambio guardado');
+}
+
+function cambiarEstado(el) {
+  const d = datos.find(x=>x.id===parseInt(el.dataset.id));
+  if (!d) return;
+  d.estado = el.value;
+  const c = d.estado==='No iniciada'?'ni':d.estado==='En curso'?'curso':d.estado==='Bloqueada'?'bloq':d.estado==='Completada'?'done':'';
+  el.className = 'status-select ' + c;
+  guardar();
+  actualizarStats();
+  showToast('Estado actualizado');
+}
+
+function actualizarStats() {
+  document.getElementById('stat-alta').textContent = datos.filter(d=>d.prioridad==='P. Alta').length;
+  document.getElementById('stat-ni').textContent = datos.filter(d=>d.estado==='No iniciada').length;
+  document.getElementById('stat-sinasig').textContent = datos.filter(d=>!d.tecnico).length;
+}
+
+function recargar() {
+  // Limpiar filtros y datos antes de recargar
+  ['f-inspector','f-molde','f-tecnico','f-prioridad','f-estado'].forEach(id=>{
+    const el = document.getElementById(id);
+    // Dejar solo el primer option
+    while (el.options.length > 1) el.remove(1);
+    el.value = '';
+  });
+  document.getElementById('f-buscar').value = '';
+  cargar();
+}
+
+function limpiarFiltros() {
+  ['f-inspector','f-molde','f-tecnico','f-prioridad','f-estado'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('f-buscar').value = '';
+  render();
+}
+
+function abrirModal(id) {
+  const d = datos.find(x=>x.id===id);
+  if (!d) return;
+  modalIdx = id;
+  document.getElementById('modal-title').textContent = d.molde;
+  document.getElementById('md-molde').value = d.molde;
+  document.getElementById('md-problema').value = d.problema;
+  document.getElementById('md-inspector').value = d.inspector;
+  document.getElementById('md-fecha').value = d.fecha;
+  document.getElementById('md-prioridad').value = d.prioridad||'';
+  document.getElementById('md-estado').value = d.estado||'';
+  document.getElementById('md-notas').value = d.notas||'';
+  const selT = document.getElementById('md-tecnico');
+  selT.innerHTML = ['', ...TECNICOS].map(t=>`<option value="${t}" ${d.tecnico===t?'selected':''}>${t||'— Sin asignar'}</option>`).join('');
+  document.getElementById('modal-detalle').classList.add('open');
+}
+
+function cerrarModal() {
+  document.getElementById('modal-detalle').classList.remove('open');
+  modalIdx = -1;
+}
+
+function guardarModal() {
+  const d = datos.find(x=>x.id===modalIdx);
+  if (!d) return;
+  d.prioridad = document.getElementById('md-prioridad').value;
+  d.tecnico   = document.getElementById('md-tecnico').value;
+  d.estado    = document.getElementById('md-estado').value;
+  d.notas     = document.getElementById('md-notas').value;
+  guardar();
+  cerrarModal();
+  render();
+  showToast('Registro actualizado');
+}
+
+function guardarCSV() {
+  const f = getFilters();
+  const filtered = filtrar(f);
+  const cols = ['Fecha','Molde','Inspector','Problema','Tarea','Prioridad','Técnico','Est. Repuestos','Estado','Fecha Inicio','Fecha Fin','Notas'];
+  const csv = [cols.join(';'), ...filtered.map(d =>
+    [d.fecha,d.molde,d.inspector,d.problema,d.tarea,d.prioridad,d.tecnico,d.estRep,d.estado,d.fechaIni,d.fechaFin,d.notas]
+      .map(v=>`"${(v||'').replace(/"/g,'""')}"`)
+      .join(';')
+  )].join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='moldes_tareas.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exportado');
+}
+
+function ajustarTheadTop() {
+  const toolbar = document.querySelector('.toolbar');
+  if (!toolbar) return;
+  const bottom = toolbar.getBoundingClientRect().bottom;
+  document.querySelector('thead').style.top = Math.round(bottom) + 'px';
+}
+
+// Init
+(async () => {
+  await cargar();
+})();
+
+requestAnimationFrame(() => { ajustarTheadTop(); setTimeout(ajustarTheadTop, 100); setTimeout(ajustarTheadTop, 500); });
+window.addEventListener('load', ajustarTheadTop);
+window.addEventListener('resize', ajustarTheadTop);
+
+['f-inspector','f-molde','f-tecnico','f-prioridad','f-estado'].forEach(id => {
+  document.getElementById(id).addEventListener('change', render);
+});
+document.getElementById('f-buscar').addEventListener('input', render);
+document.getElementById('modal-detalle').addEventListener('click', function(e){ if(e.target===this) cerrarModal(); });
+</script>
+</body>
+</html>
