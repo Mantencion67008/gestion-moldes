@@ -336,7 +336,29 @@ function setSaving(on) {
   document.getElementById('saving-ind').style.display = on ? 'inline-flex' : 'none';
 }
 
-// ── LOAD DATA ────────────────────────────────────────────
+// Convierte DD/MM/YYYY o D/M/YYYY → YYYY-MM-DD (para input type=date)
+function toInputDate(s) {
+  if (!s) return '';
+  // Si ya viene en YYYY-MM-DD, dejarlo
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // DD/MM/YYYY o D/M/YYYY HH:MM:SS
+  const p = s.split(' ')[0].split('/');
+  if (p.length === 3) {
+    const d = p[0].padStart(2,'0'), m = p[1].padStart(2,'0'), y = p[2];
+    return `${y}-${m}-${d}`;
+  }
+  return '';
+}
+
+// Convierte YYYY-MM-DD → DD/MM/YYYY (para guardar en Sheets)
+function toSheetsDate(s) {
+  if (!s) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y,m,d] = s.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  return s;
+}
 async function cargar() {
   document.getElementById('tbody').innerHTML =
     '<tr class="empty-row"><td colspan="12" style="color:var(--text3)">Cargando datos…</td></tr>';
@@ -360,8 +382,8 @@ async function cargar() {
       tecnico:   (r[6]||'').trim(),
       estRep:    (r[7]||'').trim(),
       estado:    (r[8]||'').trim(),
-      fechaIni:  (r[9]||'').trim(),
-      fechaFin:  (r[10]||'').trim(),
+      fechaIni:  toInputDate((r[9]||'').trim()),
+      fechaFin:  toInputDate((r[10]||'').trim()),
       notas:     (r[11]||'').trim(),
     }));
     document.getElementById('footer-time').textContent =
@@ -552,12 +574,19 @@ function render() {
 
 // ── CELL CHANGE ──────────────────────────────────────────
 function onCellChange(el, rowIdx, colIdx, event) {
-  const valor = el.value;
+  let valor = el.value;
+  // Si es una columna de fecha, convertir YYYY-MM-DD → DD/MM/YYYY para Sheets
+  if (colIdx === COL.fechaIni || colIdx === COL.fechaFin) {
+    valor = toSheetsDate(valor);
+  }
   // Actualizar dato local
   const d = datos.find(x=>x.rowIdx===rowIdx);
   if (d) {
     const fieldMap = Object.entries(COL).find(([,v])=>v===colIdx);
-    if (fieldMap) d[fieldMap[0]] = valor;
+    if (fieldMap) {
+      // Para fechas, guardar en formato input (YYYY-MM-DD) localmente
+      d[fieldMap[0]] = el.value;
+    }
     // Actualizar clase del select si es prioridad/estado/tecnico
     if (colIdx === COL.prioridad) {
       const c = valor==='P. Alta'?'pri-alta':valor==='P. Media'?'pri-media':valor==='P. Baja'?'pri-baja':valor==='P.0'?'pri-p0':'';
@@ -618,29 +647,4 @@ window.onload = function() {
         const me = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
           { headers: { Authorization: 'Bearer ' + accessToken } }).then(r=>r.json());
         document.getElementById('user-name').textContent = me.name || me.email;
-        if (me.picture) document.getElementById('user-avatar').src = me.picture;
-        document.getElementById('header-user').style.display = 'flex';
-      } catch(e) {}
-      document.getElementById('login-screen').style.display = 'none';
-      cargar();
-    }
-  });
-
-  // Cargar datos públicos sin login primero
-  cargar();
-
-  // Event listeners filtros
-  ['f-inspector','f-molde','f-tecnico','f-prioridad','f-estado'].forEach(id =>
-    document.getElementById(id).addEventListener('change', render));
-  document.getElementById('f-buscar').addEventListener('input', render);
-
-  requestAnimationFrame(()=>{ ajustarTheadTop(); setTimeout(ajustarTheadTop,300); });
-  window.addEventListener('load', ajustarTheadTop);
-  window.addEventListener('resize', ajustarTheadTop);
-};
-</script>
-
-<!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-</body>
-</html>
+        if (me.picture) docu
