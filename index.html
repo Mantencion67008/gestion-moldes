@@ -647,4 +647,50 @@ function initGoogleAuth() {
           const me = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
             { headers: { Authorization: 'Bearer ' + accessToken } }).then(r=>r.json());
           document.getElementById('user-name').textContent = me.name || me.email;
-          if (me.pict
+          if (me.picture) document.getElementById('user-avatar').src = me.picture;
+          document.getElementById('header-user').style.display = 'flex';
+        } catch(e) {}
+        document.getElementById('login-screen').style.display = 'none';
+        cargar();
+      }
+    });
+  } catch(e) {
+    console.error('Error inicializando Google Auth:', e);
+    showToast('Error al inicializar Google Auth', true);
+  }
+}
+
+function iniciarLogin() {
+  if (!tokenClient) {
+    showToast('Google Auth aún no está listo, espera un momento…', true);
+    setTimeout(iniciarLogin, 1000);
+    return;
+  }
+  tokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
+function cerrarSesion() {
+  if (accessToken) google.accounts.oauth2.revoke(accessToken, () => {});
+  accessToken = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('header-user').style.display = 'none';
+}
+
+window.onload = function() {
+  // Cargar datos públicos inmediatamente sin login
+  cargar();
+
+  // Event listeners filtros
+  ['f-inspector','f-molde','f-tecnico','f-prioridad','f-estado'].forEach(id =>
+    document.getElementById(id).addEventListener('change', render));
+  document.getElementById('f-buscar').addEventListener('input', render);
+
+  requestAnimationFrame(()=>{ ajustarTheadTop(); setTimeout(ajustarTheadTop,300); });
+  window.addEventListener('resize', ajustarTheadTop);
+};
+</script>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" onload="initGoogleAuth()" async defer></script>
+</body>
+</html>
