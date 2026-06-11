@@ -104,8 +104,7 @@
   td.molde { font-weight: 500; max-width: 180px; }
   td.molde.critico { color: var(--alta); }
   td.inspector { color: var(--text2); white-space: nowrap; }
-  td.ro { color: var(--text2); max-width: 220px; }
-  td.ro span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  td.ro { color: var(--text2); max-width: 280px; word-wrap: break-word; white-space: normal; }
 
   /* BADGES */
   .badge-pri, .badge-est {
@@ -243,7 +242,6 @@
         <th onclick="sortBy('molde')">Molde <span class="sa">↕</span></th>
         <th onclick="sortBy('inspector')">Inspector <span class="sa">↕</span></th>
         <th>Problema</th>
-        <th>Tarea</th>
         <th onclick="sortBy('prioridad')">Prioridad <span class="sa">↕</span></th>
         <th>Técnico</th>
         <th>Est. Repuestos</th>
@@ -341,7 +339,7 @@ function setSaving(on) {
 // ── LOAD DATA ────────────────────────────────────────────
 async function cargar() {
   document.getElementById('tbody').innerHTML =
-    '<tr class="empty-row"><td colspan="13" style="color:var(--text3)">Cargando datos…</td></tr>';
+    '<tr class="empty-row"><td colspan="12" style="color:var(--text3)">Cargando datos…</td></tr>';
   const range = encodeURIComponent(SHEET_TAB + '!A:L');
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
   try {
@@ -373,7 +371,7 @@ async function cargar() {
     requestAnimationFrame(()=>{ ajustarTheadTop(); setTimeout(ajustarTheadTop,300); });
   } catch(e) {
     document.getElementById('tbody').innerHTML =
-      `<tr class="empty-row"><td colspan="13" style="color:var(--alta)">Error al cargar: ${e.message}</td></tr>`;
+      `<tr class="empty-row"><td colspan="12" style="color:var(--alta)">Error al cargar: ${e.message}</td></tr>`;
   }
 }
 
@@ -485,7 +483,7 @@ function render() {
   const tbody = document.getElementById('tbody');
 
   if (!list.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Sin resultados.</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="12">Sin resultados.</td></tr>';
     return;
   }
 
@@ -506,8 +504,7 @@ function render() {
         <td class="fecha">${esc(d.fecha)}</td>
         <td class="molde${CRITICOS.has(d.molde)?' critico':''}">${esc(d.molde)}</td>
         <td class="inspector">${esc(d.inspector)}</td>
-        <td class="ro"><span title="${esc(d.problema)}">${esc(d.problema)}</span></td>
-        <td class="ro">${esc(d.tarea)}</td>
+        <td class="ro">${esc(d.problema)}</td>
         <td><span class="badge-pri ${priC}">${esc(d.prioridad)||'—'}</span></td>
         <td class="inspector">${esc(d.tecnico)||'—'}</td>
         <td class="inspector">${esc(d.estRep)||'—'}</td>
@@ -541,8 +538,7 @@ function render() {
       <td class="fecha">${esc(d.fecha)}</td>
       <td class="molde${CRITICOS.has(d.molde)?' critico':''}">${esc(d.molde)}</td>
       <td class="inspector">${esc(d.inspector)}</td>
-      <td class="ro"><span title="${esc(d.problema)}">${esc(d.problema)}</span></td>
-      <td style="min-width:160px">${mkTxt('tarea', d.tarea, 'Agregar tarea…')}</td>
+      <td class="ro">${esc(d.problema)}</td>
       <td style="min-width:100px">${mkSel('prioridad', priOpts, d.prioridad, priC)}</td>
       <td style="min-width:140px">${mkSel('tecnico', tecOpts, d.tecnico, tecVal)}</td>
       <td style="min-width:120px">${mkSel('estRep', repOpts, d.estRep, '')}</td>
