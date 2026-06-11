@@ -21,7 +21,7 @@
 
   /* LOGIN OVERLAY */
   #login-screen {
-    position: fixed; inset: 0; background: var(--bg);
+    position: fixed; inset: 0; background: rgba(15,17,23,0.96);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 20px; z-index: 500;
   }
@@ -635,16 +635,16 @@ function guardarCSV() {
 }
 
 // ── GOOGLE IDENTITY ──────────────────────────────────────
-window.onload = function() {
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: async (resp) => {
-      if (resp.error) { showToast('Error de autenticación: ' + resp.error, true); return; }
-      accessToken = resp.access_token;
-      // Mostrar info usuario
-      try {
-        const me = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
-          { headers: { Authorization: 'Bearer ' + accessToken } }).then(r=>r.json());
-        document.getElementById('user-name').textContent = me.name || me.email;
-        if (me.picture) docu
+function initGoogleAuth() {
+  try {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (resp) => {
+        if (resp.error) { showToast('Error de autenticación: ' + resp.error, true); return; }
+        accessToken = resp.access_token;
+        try {
+          const me = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
+            { headers: { Authorization: 'Bearer ' + accessToken } }).then(r=>r.json());
+          document.getElementById('user-name').textContent = me.name || me.email;
+          if (me.pict
