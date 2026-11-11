@@ -27,6 +27,11 @@
   }
   #login-screen h1 { font-size: 20px; font-weight: 600; }
   #login-screen p { font-size: 13px; color: var(--text2); text-align: center; max-width: 340px; }
+  #login-screen p#login-error {
+    display: none; color: var(--alta); background: var(--alta-bg);
+    border: 1px solid var(--alta); border-radius: var(--radius);
+    padding: 8px 12px; max-width: 380px;
+  }
   .btn-google {
     display: flex; align-items: center; gap: 10px;
     background: #fff; color: #333; border: none;
@@ -181,6 +186,7 @@
 <div id="login-screen">
   <h1>Gestión de Moldes</h1>
   <p>Inicia sesión con tu cuenta de Google para ver y editar las tareas de mantenimiento.</p>
+  <p id="login-error"></p>
   <button class="btn-google" onclick="iniciarLogin()">
     <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
     Iniciar sesión con Google
@@ -294,21 +300,9 @@ const CRITICOS = new Set([
 const COL = { tarea:4, prioridad:5, tecnico:6, estRep:7, estado:8, fechaIni:9, fechaFin:10, notas:11 };
 
 // ── STATE ────────────────────────────────────────────────
-let tokenClient, accessToken = null;
+let accessToken = null;
 let datos = [], sortCol = 'fecha', sortDir = 1;
 let pendingSave = {}; // rowIdx -> {field: value}
-
-// ── AUTH ─────────────────────────────────────────────────
-function iniciarLogin() {
-  tokenClient.requestAccessToken({ prompt: 'consent' });
-}
-
-function cerrarSesion() {
-  google.accounts.oauth2.revoke(accessToken, () => {});
-  accessToken = null;
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('header-user').style.display = 'none';
-}
 
 // ── HELPERS ──────────────────────────────────────────────
 function esc(s) {
@@ -414,6 +408,7 @@ async function guardarCelda(rowIdx, colIdx, valor) {
       }
     );
     if (!res.ok) {
+      if (res.status === 401) { sesionExpirada(); throw new Error('la sesión expiró, vuelve a iniciar sesión'); }
       const err = await res.json();
       throw new Error(err.error?.message || 'HTTP ' + res.status);
     }
@@ -634,50 +629,119 @@ function guardarCSV() {
   a.href = URL.createObjectURL(blob); a.download='moldes_tareas.csv'; a.click();
 }
 
-// ── GOOGLE IDENTITY ──────────────────────────────────────
-function initGoogleAuth() {
-  try {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: async (resp) => {
-        if (resp.error) { showToast('Error de autenticación: ' + resp.error, true); return; }
-        accessToken = resp.access_token;
-        try {
-          const me = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',
-            { headers: { Authorization: 'Bearer ' + accessToken } }).then(r=>r.json());
-          document.getElementById('user-name').textContent = me.name || me.email;
-          if (me.picture) document.getElementById('user-avatar').src = me.picture;
-          document.getElementById('header-user').style.display = 'flex';
-        } catch(e) {}
-        document.getElementById('login-screen').style.display = 'none';
-        cargar();
-      }
-    });
-  } catch(e) {
-    console.error('Error inicializando Google Auth:', e);
-    showToast('Error al inicializar Google Auth', true);
-  }
-}
+// ── LOGIN CON GOOGLE (por redirección, sin ventana emergente) ──
+// La página lleva a Google y Google vuelve a esta misma dirección con el
+// permiso en la URL (#access_token=...). Así no depende de que el navegador
+// deje comunicarse a una ventana emergente con la página.
+// IMPORTANTE: REDIRECT_URI debe estar en "URIs de redireccionamiento autorizados"
+// del cliente OAuth en Google Cloud Console (exactamente igual, con la / final).
+const REDIRECT_URI = location.origin + location.pathname;
+const TOKEN_KEY = 'gm_token';
+const STATE_KEY = 'gm_state';
+let expTimer = null;
 
 function iniciarLogin() {
-  if (!tokenClient) {
-    showToast('Google Auth aún no está listo, espera un momento…', true);
-    setTimeout(iniciarLogin, 1000);
-    return;
-  }
-  tokenClient.requestAccessToken({ prompt: 'consent' });
+  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  try { sessionStorage.setItem(STATE_KEY, state); } catch(e) {}
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    response_type: 'token',
+    scope: SCOPES,
+    include_granted_scopes: 'true',
+    state
+  });
+  location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
 }
 
-function cerrarSesion() {
-  if (accessToken) google.accounts.oauth2.revoke(accessToken, () => {});
+// Lee la respuesta de Google al volver a la página
+function procesarRetornoLogin() {
+  if (!location.hash || location.hash.length < 2) return;
+  const p = new URLSearchParams(location.hash.slice(1));
+  if (!p.has('access_token') && !p.has('error')) return;
+  // Sacar el token de la barra de direcciones
+  history.replaceState(null, '', location.pathname + location.search);
+
+  let esperado = null;
+  try { esperado = sessionStorage.getItem(STATE_KEY); sessionStorage.removeItem(STATE_KEY); } catch(e) {}
+
+  if (p.get('error')) {
+    const e = p.get('error');
+    mostrarErrorLogin(e === 'access_denied'
+      ? 'No se dio el permiso en Google. Vuelve a intentarlo y presiona Continuar.'
+      : 'Google rechazó el inicio de sesión (' + e + ').');
+    return;
+  }
+  if (esperado && p.get('state') !== esperado) {
+    mostrarErrorLogin('La respuesta de inicio de sesión no es válida. Vuelve a intentarlo.');
+    return;
+  }
+  if (!(p.get('scope') || '').includes('auth/spreadsheets')) {
+    mostrarErrorLogin('Falta el permiso de Hojas de cálculo. Al iniciar sesión, marca la casilla de Google Sheets.');
+    return;
+  }
+  const segundos = parseInt(p.get('expires_in') || '3600', 10);
+  const exp = Date.now() + (segundos - 60) * 1000;
+  try { sessionStorage.setItem(TOKEN_KEY, JSON.stringify({ tok: p.get('access_token'), exp })); } catch(e) {}
+  aplicarSesion(p.get('access_token'), exp);
+}
+
+// Si la pestaña ya tenía sesión (por ejemplo al recargar), la reutiliza
+function restaurarSesion() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem(TOKEN_KEY) || 'null');
+    if (s && s.tok && s.exp > Date.now()) aplicarSesion(s.tok, s.exp);
+    else sessionStorage.removeItem(TOKEN_KEY);
+  } catch(e) {}
+}
+
+function aplicarSesion(tok, exp) {
+  accessToken = tok;
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('user-avatar').style.display = 'none';
+  document.getElementById('user-name').textContent = 'Sesión iniciada';
+  document.getElementById('header-user').style.display = 'flex';
+  clearTimeout(expTimer);
+  expTimer = setTimeout(sesionExpirada, Math.max(0, exp - Date.now()));
+}
+
+function limpiarSesion() {
   accessToken = null;
+  clearTimeout(expTimer);
+  try { sessionStorage.removeItem(TOKEN_KEY); } catch(e) {}
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('header-user').style.display = 'none';
 }
 
+function sesionExpirada() {
+  limpiarSesion();
+  mostrarErrorLogin('La sesión expiró (dura 1 hora). Vuelve a iniciar sesión.');
+  render();
+}
+
+function cerrarSesion() {
+  if (accessToken) {
+    fetch('https://oauth2.googleapis.com/revoke?token=' + encodeURIComponent(accessToken),
+      { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).catch(() => {});
+  }
+  limpiarSesion();
+  document.getElementById('login-error').style.display = 'none';
+  render();
+}
+
+function mostrarErrorLogin(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
 window.onload = function() {
-  // Cargar datos públicos inmediatamente sin login
+  procesarRetornoLogin();
+  if (!accessToken) restaurarSesion();
+
+  // Cargar datos (con permiso de edición si hay sesión)
   cargar();
 
   // Event listeners filtros
@@ -689,8 +753,5 @@ window.onload = function() {
   window.addEventListener('resize', ajustarTheadTop);
 };
 </script>
-
-<!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" onload="initGoogleAuth()" async defer></script>
 </body>
 </html>
